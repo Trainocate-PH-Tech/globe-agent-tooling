@@ -51,11 +51,11 @@ class TripAgent:
     def run(self, user_input: str):
         city_match = re.search(r"\b(Kyoto|Osaka)\b", user_input)
         if city_match:
-            self.agent.state["last_city"] = city_match.group(0)
-            self.agent.state["plan"] = [
+            self.agent.state.set("last_city", city_match.group(0))
+            self.agent.state.set("plan", [
                 "list attractions",
                 "pick top 2",
                 "get hours",
                 "respond",
-            ]
+            ])
         return self.agent(user_input)

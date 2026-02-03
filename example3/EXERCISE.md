@@ -49,3 +49,7 @@ Tool #3: get_hours
 ---
 
 Place your solution in `example3/solution/`.
+
+## Challenge Constraints
+- Consider the user passing in a budget in terms of number of hours
+- If there are no attractions that fit within the budget, do not respond with anything.
