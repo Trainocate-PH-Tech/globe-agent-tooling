@@ -4,7 +4,7 @@ from typing import Any
 
 from strands import Agent
 from strands.models.openai import OpenAIModel
-from tools import escalate_to_human, get_account_profile, get_recent_events, score_risk
+from tools import get_hours, read_attractions_file
 
 
 class ToolLogCallbackHandler:
@@ -24,7 +24,7 @@ class ToolLogCallbackHandler:
             print(f"Tool #{self.tool_count}: {tool_name}")
 
 
-class RiskAgent:
+class TripAgent:
     def __init__(self):
         self.model = OpenAIModel(model_id="gpt-4o-mini")
         if os.getenv("OPENAI_API_KEY"):
@@ -35,28 +35,27 @@ class RiskAgent:
 
         self.agent = Agent(
             model=self.model,
-            tools=[get_account_profile, get_recent_events, score_risk, escalate_to_human],
+            tools=[get_hours, read_attractions_file],
             system_prompt=(
-                "You are a simple risk scoring agent for Globe PH.\n"
-                "If the user provides an MSISDN, call get_account_profile and get_recent_events.\n"
-                "Then call score_risk(profile, events).\n"
-                "If band is high, call escalate_to_human with a reason.\n"
-                "If band is medium or low, approve with a brief explanation.\n"
-                "If MSISDN is missing, ask for it.\n"
-                "Do not invent MSISDNs or signals."
+                "You are a simple trip planner.\n"
+                "If the user provides a city, call read_attractions_file(city).\n"
+                "Pick two attractions and call get_hours(place) for each.\n"
+                "Return a JSON-like dict with city and stops.\n"
+                "If no city is provided, ask for it.\n"
+                "Do not invent places or hours."
             ),
             callback_handler=ToolLogCallbackHandler(),
-            state={"last_msisdn": None, "plan": []},
+            state={"last_city": None, "plan": []},
         )
 
     def run(self, user_input: str):
-        msisdn_match = re.search(r"\b09\d{9}\b", user_input)
-        if msisdn_match:
-            self.agent.state.set("last_msisdn", msisdn_match.group(0))
+        city_match = re.search(r"\b(Kyoto|Osaka)\b", user_input)
+        if city_match:
+            self.agent.state.set("last_city", city_match.group(0))
             self.agent.state.set("plan", [
-                "fetch profile",
-                "fetch events",
-                "score risk",
-                "decide",
+                "list attractions",
+                "pick top 2",
+                "get hours",
+                "respond",
             ])
         return self.agent(user_input)

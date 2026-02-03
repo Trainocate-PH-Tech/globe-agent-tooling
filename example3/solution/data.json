@@ -1,0 +1,12 @@
+{
+  "Kyoto": [
+    { "name": "K Attaction 1", "opening_hours": "8:00-12:00" },
+    { "name": "K Attaction 2", "opening_hours": "10:00-12:00" },
+    { "name": "K Attaction 3", "opening_hours": "8:00-15:00" }
+  ],
+  "Tokyo": [
+    { "name": "T Attaction 1", "opening_hours": "8:00-12:00" }, 
+    { "name": "T Attaction 2", "opening_hours": "10:00-12:00" },
+    { "name": "T Attaction 3", "opening_hours": "8:00-15:00" }
+  ]
+}

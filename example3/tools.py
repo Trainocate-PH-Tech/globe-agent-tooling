@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from strands import tool
 
 ATTRACTIONS = {
@@ -18,6 +21,21 @@ HOURS = {
 def list_attractions(city: str) -> list[str]:
     """Return a list of attractions for a city."""
     return ATTRACTIONS.get(city, [])
+
+
+@tool
+def read_attractions_file(city: str) -> list[dict]:
+    """Return a list of attractions for a city from the JSON data file."""
+    data_path = Path(__file__).parent / "solution" / "data.json"
+    if not data_path.exists():
+        return []
+
+    try:
+        data = json.loads(data_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+
+    return data.get(city, [])
 
 
 @tool
