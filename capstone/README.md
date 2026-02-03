@@ -32,8 +32,8 @@ capstone/agent.py
 Starter template for a streaming Agent deployable in Moltbook.
 """
 
-from dataclasses import dataclass, asdict
-from typing import Dict, Iterable, Generator, Optional
+from dataclasses import dataclass
+from typing import Dict, Generator, Optional
 
 
 @dataclass
@@ -58,47 +58,54 @@ class StreamEvent:
         return {"type": self.type, **self.payload}
 
 
+class Agent:
+    def __init__(self, config: Optional[AgentConfig] = None):
+        self.config = config or AgentConfig()
+
+    def stream(self, prompt: str) -> Generator[StreamEvent, None, Dict]:
+        # 1) Start event
+        yield StreamEvent("start", {"config": vars(self.config)})
+
+        # 2) TODO: Insert your agent logic here.
+        #    - Call the model with streaming enabled
+        #    - Yield StreamEvent("token", {"text": token}) as tokens arrive
+        #    - Yield StreamEvent("tool", {...}) for tool calls if used
+
+        # Example placeholder stream (replace with real streaming):
+        yield StreamEvent("token", {"text": "Thinking... "})
+
+        # 3) Final result
+        result = {
+            "answer": "Replace this with your final response",
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+        }
+
+        yield StreamEvent("final", result)
+        return result
+
+    def run(self, prompt: str) -> Dict:
+        """
+        Convenience wrapper that consumes the stream and returns final output.
+        """
+        final = None
+        for event in self.stream(prompt):
+            if event.type == "final":
+                final = event.payload
+        return final or {}
+
+
 def stream_agent(prompt: str, config: Optional[AgentConfig] = None) -> Generator[StreamEvent, None, Dict]:
     """
-    Streaming generator.
-
-    Yields StreamEvent objects as the agent progresses and returns
-    a final dict result at the end.
+    Backwards-compatible functional interface.
     """
-    if config is None:
-        config = AgentConfig()
-
-    # 1) Start event
-    yield StreamEvent("start", {"config": asdict(config)})
-
-    # 2) TODO: Insert your agent logic here.
-    #    - Call the model with streaming enabled
-    #    - Yield StreamEvent("token", {"text": token}) as tokens arrive
-    #    - Yield StreamEvent("tool", {...}) for tool calls if used
-
-    # Example placeholder stream (replace with real streaming):
-    for word in ("Thinking... ".split()):
-        yield StreamEvent("token", {"text": word + " "})
-
-    # 3) Final result
-    result = {
-        "answer": "Replace this with your final response",
-        "usage": {"prompt_tokens": 0, "completion_tokens": 0},
-    }
-
-    yield StreamEvent("final", result)
-    return result
+    return Agent(config=config).stream(prompt)
 
 
 def run(prompt: str, config: Optional[AgentConfig] = None) -> Dict:
     """
-    Convenience wrapper that consumes the stream and returns final output.
+    Backwards-compatible functional interface.
     """
-    final = None
-    for event in stream_agent(prompt, config):
-        if event.type == "final":
-            final = event.payload
-    return final or {}
+    return Agent(config=config).run(prompt)
 ```
 
 ---
