@@ -29,16 +29,23 @@ class HelloAgent:
                 model_id="gpt-4o-mini"
             )
 
+        self.callback_handler = ToolLogCallbackHandler()
         self.agent = Agent(
             model=self.model,
             tools=[greet],
             system_prompt=(
-                "You are a simple agent",
-                "If the user wants to greet someone, use greet tool",
-                "Do not greet directly"
+                "You are a simple agent.\n",
+                "If the user wants to greet someone, use `greet` tool.\n",
+                "Do not greet directly.\n",
+                "If the user prompts for something that is not a greeting to someone, respond with `No`\n"
             ),
-            callback_handler=ToolLogCallbackHandler()
+            callback_handler=self.callback_handler
         )
 
     def run(self, user_input: str):
-        return self.agent(user_input)
+        response = self.agent(user_input)
+        if self.callback_handler.tool_count == 0:
+            return "No tools used"
+        else:
+            return response
+

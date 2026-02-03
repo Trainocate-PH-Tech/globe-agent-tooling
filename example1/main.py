@@ -2,6 +2,6 @@ from agent import HelloAgent
 
 agent = HelloAgent()
 
-result = agent.run("Say hello to Raphael")
+result = agent.run("Is the sky blue?")
 
 print(result)
