@@ -4,14 +4,7 @@ from typing import Any
 
 from strands import Agent
 from strands.models.openai import OpenAIModel
-from tools import (
-    build_review_summary,
-    create_review_ticket,
-    get_account_profile,
-    get_recent_events,
-    route_to_queue,
-    score_risk,
-)
+from tools import escalate_to_human, get_account_profile, get_recent_events, score_risk, get_network_risk
 
 
 class ToolLogCallbackHandler:
@@ -31,7 +24,7 @@ class ToolLogCallbackHandler:
             print(f"Tool #{self.tool_count}: {tool_name}")
 
 
-class ReviewAgent:
+class RiskAgent:
     def __init__(self):
         self.model = OpenAIModel(model_id="gpt-4o-mini")
         if os.getenv("OPENAI_API_KEY"):
@@ -42,24 +35,18 @@ class ReviewAgent:
 
         self.agent = Agent(
             model=self.model,
-            tools=[
-                get_account_profile,
-                get_recent_events,
-                score_risk,
-                build_review_summary,
-                create_review_ticket,
-                route_to_queue,
-            ],
+            tools=[get_account_profile, get_recent_events, score_risk, escalate_to_human, get_network_risk],
             system_prompt=(
-                "You are a human-in-the-loop review agent.\n"
-                "If MSISDN is provided, gather profile and events, then score risk.\n"
-                "If risk is high or unknown, build a review summary, create a ticket,\n"
-                "and route it to the 'risk-review' queue.\n"
-                "If risk is low or medium, respond with approval and reason.\n"
-                "Do not invent data."
+                "You are a simple risk scoring agent for Globe PH.\n"
+                "If the user provides an MSISDN, call get_account_profile and get_recent_events.\n"
+                "Then call score_risk(profile, events).\n"
+                "If band is high, call escalate_to_human with a reason.\n"
+                "If band is medium or low, approve with a brief explanation.\n"
+                "If MSISDN is missing, ask for it.\n"
+                "Do not invent MSISDNs or signals."
             ),
             callback_handler=ToolLogCallbackHandler(),
-            state={"last_msisdn": None, "plan": [], "ticket_id": None},
+            state={"last_msisdn": None, "plan": []},
         )
 
     def run(self, user_input: str):
@@ -70,8 +57,6 @@ class ReviewAgent:
                 "fetch profile",
                 "fetch events",
                 "score risk",
-                "summarize",
-                "create ticket",
-                "route to queue",
+                "decide",
             ])
         return self.agent(user_input)
