@@ -1,0 +1,4 @@
+# msisdn|status|risk_band
+09171234567|ok|high
+09181234567|ok|low
+09999999999|error|timeout
